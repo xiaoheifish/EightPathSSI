@@ -26,8 +26,8 @@ signals:
     void response(const QString &s);
     void error(const QString &s);
     void timeout(const QString &s);
+    void responserialall(const QString &s);
     void responserial(const QString &s);
-    void responserial2(const QString &s);
     void pathtwosend();
 private:
     QString portName;

@@ -190,21 +190,20 @@ void MasterThread::run()
             }
         }
         while(writeread == 12 && isReading == 1){
-            serial.setBaudRate(baudRate);
-            if(currentRequest == "20"){
                 QByteArray requestData2;
+            if(currentRequest.contains("38")){
                 requestData2.resize(1);
-                requestData2[0] = 0x20;
+                requestData2[0] = 0x48;
                 serial.write(requestData2);
-                if (serial.waitForBytesWritten(waitTimeout)) {
+                if(serial.waitForBytesWritten(waitTimeout)){
                     // read response
-                    if(serial.waitForReadyRead(currentWaitTimeout)) {
-                        while(serial.bytesAvailable()<4);
+                    if(serial.waitForReadyRead(currentWaitTimeout)){
+                        while(serial.bytesAvailable()<32);
                         QByteArray responseData = serial.readAll();
-                        while (serial.waitForReadyRead(10))
+                        while(serial.waitForReadyRead(10))
                             responseData += serial.readAll();
                         QString responseint="";
-                        for(int i = 0;i < 4;i++){
+                        for(int i = 0;i < 32;i++){
                             unsigned char iTemp = responseData.at(i);
                             QString str = QString::number(iTemp&0xff,16);
                             if(iTemp<10){
@@ -213,7 +212,7 @@ void MasterThread::run()
                             responseint += str;
                         }
                         QString response(responseint);
-                        emit this->responserial(response);
+                        emit this->responserialall(response);
                     }else {
                         emit timeout(tr("Wait read response timeout %1")
                                      .arg(QTime::currentTime().toString()));
@@ -222,108 +221,234 @@ void MasterThread::run()
                     emit timeout(tr("Wait write request timeout %1")
                                  .arg(QTime::currentTime().toString()));
                 }
-
             }
-            if(currentRequest == "24"){
-                QByteArray requestData3;
-                requestData3.resize(1);
-                requestData3[0] = 0x24;
-                serial.write(requestData3);
-                if (serial.waitForBytesWritten(waitTimeout)) {
-                    // read response
-                    if(serial.waitForReadyRead(currentWaitTimeout)) {
-                        while(serial.bytesAvailable()<4);
-                        QByteArray responseData = serial.readAll();
-                        while (serial.waitForReadyRead(10))
-                            responseData += serial.readAll();
-                        QString responseint="";
-                        for(int i = 0;i < 4;i++){
-                            unsigned char iTemp = responseData.at(i);
-                            QString str = QString::number(iTemp&0xff,16);
-                            if(iTemp<10){
-                                str.insert(0,"0");
+            else{
+                QString responseint;
+                if(currentRequest.contains("30")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x40;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
                             }
-                            responseint += str;
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
                         }
-                        QString response(responseint);
-                        emit this->responserial2(response);
-                    }else {
-                        emit timeout(tr("Wait read response timeout %1")
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
                                      .arg(QTime::currentTime().toString()));
                     }
-                } else {
-                    emit timeout(tr("Wait write request timeout %1")
-                                 .arg(QTime::currentTime().toString()));
                 }
-
-            }
-            if(currentRequest == "2024"){
-                QByteArray requestData2;
-                requestData2.resize(1);
-                requestData2[0] = 0x20;
-                qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-                serial.write(requestData2);
-                if (serial.waitForBytesWritten(waitTimeout)) {
-                    // read response
-                    if(serial.waitForReadyRead(currentWaitTimeout)) {
-                        while(serial.bytesAvailable()<4);
-                        QByteArray responseData = serial.readAll();
-                        while (serial.waitForReadyRead(5))
-                            responseData += serial.readAll();
-                        qDebug()<<QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-                        QString responseint="";
-                        for(int i = 0;i < 4;i++){
-                            unsigned char iTemp = responseData.at(i);
-                            QString str = QString::number(iTemp&0xff,16);
-                            if(iTemp<10){
-                                str.insert(0,"0");
+                if(currentRequest.contains("31")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x41;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
                             }
-                            responseint += str;
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
                         }
-                        QString response(responseint);
-                        emit this->responserial(response);
-                    }else {
-                        emit timeout(tr("Wait read response timeout %1")
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
                                      .arg(QTime::currentTime().toString()));
                     }
-                } else {
-                    emit timeout(tr("Wait write request timeout %1")
-                                 .arg(QTime::currentTime().toString()));
                 }
-                if(baudRate == 19200 || baudRate == 9600){
-                    msleep(5);
-                }
-                QByteArray requestData3;
-                requestData3.resize(1);
-                requestData3[0] = 0x24;
-                serial.write(requestData3);
-                if (serial.waitForBytesWritten(waitTimeout)) {
-                    // read response
-                    if(serial.waitForReadyRead(currentWaitTimeout)) {
-                        while(serial.bytesAvailable()<4);
-                        QByteArray responseData = serial.readAll();
-                        while (serial.waitForReadyRead(5))
-                            responseData += serial.readAll();
-                        QString responseint="";
-                        for(int i = 0;i < 4;i++){
-                            unsigned char iTemp = responseData.at(i);
-                            QString str = QString::number(iTemp&0xff,16);
-                            if(iTemp<10){
-                                str.insert(0,"0");
+                if(currentRequest.contains("32")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x42;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
                             }
-                            responseint += str;
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
                         }
-                        QString response(responseint);
-                        emit this->responserial2(response);
-                    }else {
-                        emit timeout(tr("Wait read response timeout %1")
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
                                      .arg(QTime::currentTime().toString()));
                     }
-                } else {
-                    emit timeout(tr("Wait write request timeout %1")
-                                 .arg(QTime::currentTime().toString()));
                 }
-
+                if(currentRequest.contains("33")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x43;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
+                            }
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
+                        }
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
+                                     .arg(QTime::currentTime().toString()));
+                    }
+                }
+                if(currentRequest.contains("34")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x44;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
+                            }
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
+                        }
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
+                                     .arg(QTime::currentTime().toString()));
+                    }
+                }
+                if(currentRequest.contains("35")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x45;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
+                            }
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
+                        }
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
+                                     .arg(QTime::currentTime().toString()));
+                    }
+                }
+                if(currentRequest.contains("36")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x46;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
+                            }
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
+                        }
+                    }else{
+                        emit timeout(tr("Wait write request timeout %1")
+                                     .arg(QTime::currentTime().toString()));
+                    }
+                }
+                if(currentRequest.contains("37")){
+                    requestData2.resize(1);
+                    requestData2[0] = 0x47;
+                    serial.write(requestData2);
+                    if(serial.waitForBytesWritten(waitTimeout)){
+                        // read response
+                        if(serial.waitForReadyRead(currentWaitTimeout)){
+                            while(serial.bytesAvailable()<4);
+                            QByteArray responseData = serial.readAll();
+                            while(serial.waitForReadyRead(10))
+                                responseData += serial.readAll();
+                            for(int i = 0;i < 4;i++){
+                                unsigned char iTemp = responseData.at(i);
+                                QString str = QString::number(iTemp&0xff,16);
+                                if(iTemp<10){
+                                    str.insert(0,"0");
+                                }
+                                responseint += str;
+                            }
+                        }else {
+                            emit timeout(tr("Wait read response timeout %1")
+                                         .arg(QTime::currentTime().toString()));
+                        }
+                    } else {
+                        emit timeout(tr("Wait write request timeout %1")
+                                     .arg(QTime::currentTime().toString()));
+                    }
+                }
+                emit this->responserial(responseint);
             }
             if(baudRate == 19200 || baudRate == 9600){
                 msleep(5);

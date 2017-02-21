@@ -46,6 +46,10 @@ private slots:
     void showResponse(const QString &s);
     void on_checkBoxPathAll_2_clicked();
     void on_buttonAddWrite_2_clicked();
+    void on_buttonSerialStart_clicked();
+    void pathtwosenddata();
+    void showserialall(const QString &s);
+    void showserial(const QString &s);
 private:
     Ui::MainWindow *ui;
     FT_HANDLE ftHandle;

@@ -162,6 +162,10 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(showResponse(QString)));
     connect(&serialthread, SIGNAL(pathtwosend()),
             this,SLOT(pathtwosenddata()));
+    connect(&serialthread, SIGNAL(responserialall(QString)),
+            this,SLOT(showserialall(QString)));
+    connect(&serialthread, SIGNAL(responserial(QString)),
+            this,SLOT(showserial(QString)));
 }
 
 MainWindow::~MainWindow()
@@ -169,6 +173,10 @@ MainWindow::~MainWindow()
     delete ui;
     if(thread.isRunning()){
         thread.stop();
+    }
+    if(serialthread.isRunning()){
+        serialthread.setReading(0);
+        serialthread.stop();
     }
     if(timethread.isRunning()){
         timethread.setStopped(true);
@@ -735,5 +743,32 @@ void MainWindow::pathtwosenddata(){
                                  timeout,
                                  "88",
                                  writeread);
+    }
+}
+void MainWindow::showserialall(const QString &s)
+{
+    for(int i=0; i<s.length(); i++){
+        serialhash[i]->setText(s.mid(i*2,2));
+        if((i+1)%4==0){
+            serialcountlist[(i+1)%4]+=1;
+            serialhashcount[(i+1)%4]->setText(QString::number(serialcountlist[(i+1)%4],10));
+        }
+    }
+}
+
+void MainWindow::showserial(const QString &s)
+{
+    QString currentPath = "";
+    for(int i=0; i<serialtempchannel.length(); i++){
+        if((!(serialtempchannel.at(i)=="1"))||(serialtempchannel.at(i)=="1" &&serialtempchannel.at(i+1)=="1")){
+            currentPath.append(serialtempchannel.at(i));
+        }
+    }
+    for(int i=0; i<currentPath.length(); i++){
+        for(int j=0; j<4; j++){
+            serialhash[(QString(currentPath.at(i)).toInt()-1)*4+j]->setText(s.mid((i-1)*4+j,2));
+        }
+        serialcountlist[QString(currentPath.at(i)).toInt()-1]+=1;
+        serialhashcount[QString(currentPath.at(i)).toInt()-1]->setText(QString::number(serialcountlist[QString(currentPath.at(i)).toInt()-1],10));
     }
 }
