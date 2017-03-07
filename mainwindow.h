@@ -69,6 +69,7 @@ private:
     QString tempchannel;
     QString *serialchannel;
     QString serialtempchannel;
+    QString pathrecord;
     int currentBaudRate;
     int USBstatus;
     int countpath1,countpath2,countpath3,countpath4,countpath5,countpath6,countpath7,countpath8;

@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    qRegisterMetaType<DWORD>("DWORD");
     ui->setupUi(this);
     ui->tabWidget->setStyleSheet("QTabWidget:pane{border-top:0px solid #e8f3f9;background:transparent;}");
     timethread.start();
@@ -201,7 +202,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    qDebug()<<event->pos();
+    //qDebug()<<event->pos();
 }
 //draw line between items
 void MainWindow::paintEvent(QPaintEvent *)
@@ -366,6 +367,7 @@ void MainWindow::on_buttonAddWrite_clicked()
     BYTE TxBufferAdd[2]={0};
     DWORD BytesWritten;
     FT_STATUS ftStatus;
+    *channel = "";
     if(ui->checkBoxPathAll->isChecked()){
         TxBufferAdd[0]=0x18;
         TxBufferAdd[1]=ui->textPathAll->text().toInt();
@@ -425,7 +427,7 @@ void MainWindow::on_buttonAddWrite_clicked()
     if(tempchannel != *channel){
         tempchannel = *channel;
     }
-    *channel = "";
+    QMessageBox::information(this, "Message", "位宽数据已经写入硬件");
 }
 //Choose all paths shortcut
 void MainWindow::on_checkBoxPathAll_clicked()
@@ -467,8 +469,7 @@ void MainWindow::on_buttonUSBstart_clicked()
     thread.setChannel(channel);
     thread.setFtHandle(ftHandle);
     thread.transaction();
-    *channel = "";
-    QMessageBox::information(this, "Message", "位宽数据已经写入硬件");
+    //*channel = "";
 }
 
 void MainWindow::usbresponsedata(const QString &s, DWORD bytesreceived)
@@ -487,19 +488,23 @@ void MainWindow::usbresponsedata(const QString &s, DWORD bytesreceived)
 //hashcount[0],hashcount[1],hashcount[3]
 void MainWindow::usbresponsedata2(const QString &s, DWORD bytesreceived)
 {
-    if(tempchannel.length()*2!=bytesreceived){
-        QMessageBox::information(this, "Message", "数据有误");
-        return;
-    }
-    QString currentPath = "";
-    for(int i=0; i<tempchannel.length(); i++){
-        if((!(tempchannel.at(i)=="1"))||(tempchannel.at(i)=="1" &&tempchannel.at(i+1)=="1")){
-            currentPath.append(tempchannel.at(i));
+    //    if(tempchannel.length()*2!=bytesreceived){
+    //        QMessageBox::information(this, "Message", "数据有误");
+    //        return;
+    //    }
+    QString currentPath;
+    for(int i=1; i<tempchannel.length(); i++){
+        if(tempchannel.at(i)=="1"){
+            currentPath.append(tempchannel.at(i-1));
         }
     }
+//    if(currentPath.contains("11")){
+//        currentPath = currentPath.mid(1);
+//    }
     for(int i=0; i<currentPath.length(); i++){
         for(int j=0; j<4; j++){
-            hash[(QString(currentPath.at(i)).toInt()-1)*4+j]->setText(s.mid((i-1)*4+j,2));
+            QString showtext = s.mid((i*4+j)*2,2);
+            hash[(QString(currentPath.at(i)).toInt()-1)*4+j]->setText(showtext);
         }
         countlist[QString(currentPath.at(i)).toInt()-1]+=1;
         hashcount[QString(currentPath.at(i)).toInt()-1]->setText(QString::number(countlist[QString(currentPath.at(i)).toInt()-1],10));
@@ -513,8 +518,8 @@ void MainWindow::handleComChange(const QString &s)
     for(int i =0;i < ui->serialPortComboBox->count();i++){
         ui->serialPortComboBox->removeItem(0);
     }
-    for(int i = 0;i<myList.size()-1;i++){
-        if(!(myList[i]==" "))
+    for(int i = 0;i<myList.size();i++){
+        if(!(myList[i]==""))
             ui->serialPortComboBox->addItem(myList[i]);
     }
     ui->serialPortComboBox->setFocus();
@@ -618,6 +623,7 @@ void MainWindow::on_checkBoxPathAll_2_clicked()
 
 void MainWindow::on_buttonAddWrite_2_clicked()
 {
+    pathrecord = "";
     if(ui->checkBoxPathAll_2->isChecked()){
         serialchannel->append("38");
         QString bitwide;
@@ -627,6 +633,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
         else
             bitwide = ui->textPathAll_2->text();
         serialchannel->append(bitwide);
+        pathrecord.contains("91");
     }
     else{
         if(ui->checkBoxPathOne_2->isChecked()){
@@ -638,6 +645,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathOne_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("11");
         }
         if(ui->checkBoxPathTwo_2->isChecked()){
             serialchannel->append("31");
@@ -648,6 +656,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathTwo_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("21");
         }
         if(ui->checkBoxPathThree_2->isChecked()){
             serialchannel->append("32");
@@ -658,6 +667,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathThree_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("31");
         }
         if(ui->checkBoxPathFour_2->isChecked()){
             serialchannel->append("33");
@@ -668,6 +678,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathFour_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("41");
         }
         if(ui->checkBoxPathFive_2->isChecked()){
             serialchannel->append("34");
@@ -678,6 +689,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathFive_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("51");
         }
         if(ui->checkBoxPathSix_2->isChecked()){
             serialchannel->append("35");
@@ -688,6 +700,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathSix_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("61");
         }
         if(ui->checkBoxPathSeven_2->isChecked()){
             serialchannel->append("36");
@@ -698,6 +711,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathSeven_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("71");
         }
         if(ui->checkBoxPathEight_2->isChecked()){
             serialchannel->append("37");
@@ -708,6 +722,7 @@ void MainWindow::on_buttonAddWrite_2_clicked()
             else
                 bitwide = ui->textPathEight_2->text();
             serialchannel->append(bitwide);
+            pathrecord.append("81");
         }
     }
     if(serialtempchannel != *serialchannel){
@@ -730,7 +745,7 @@ void MainWindow::on_buttonSerialStart_clicked()
     serialthread.transaction(ui->serialPortComboBox->currentText(),
                              ui->comboBoxBaud->currentIndex(),
                              timeout,
-                             serialtempchannel,
+                             pathrecord,
                              writeread);
 }
 void MainWindow::pathtwosenddata(){
@@ -758,15 +773,32 @@ void MainWindow::showserialall(const QString &s)
 
 void MainWindow::showserial(const QString &s)
 {
-    QString currentPath = "";
-    for(int i=0; i<serialtempchannel.length(); i++){
-        if((!(serialtempchannel.at(i)=="1"))||(serialtempchannel.at(i)=="1" &&serialtempchannel.at(i+1)=="1")){
-            currentPath.append(serialtempchannel.at(i));
+//    QString currentPath = "";
+//    for(int i=0; i<serialtempchannel.length(); i++){
+//        if((!(serialtempchannel.at(i)=="1"))||(serialtempchannel.at(i)=="1" &&serialtempchannel.at(i+1)=="1")){
+//            currentPath.append(serialtempchannel.at(i));
+//        }
+//    }
+//    for(int i=0; i<currentPath.length(); i++){
+//        for(int j=0; j<4; j++){
+//            serialhash[(QString(currentPath.at(i)).toInt()-1)*4+j]->setText(s.mid((i-1)*4+j,2));
+//        }
+//        serialcountlist[QString(currentPath.at(i)).toInt()-1]+=1;
+//        serialhashcount[QString(currentPath.at(i)).toInt()-1]->setText(QString::number(serialcountlist[QString(currentPath.at(i)).toInt()-1],10));
+//    }
+    QString currentPath;
+    for(int i=1; i<pathrecord.length(); i++){
+        if(pathrecord.at(i)=="1"){
+            currentPath.append(pathrecord.at(i-1));
         }
     }
+//    if(currentPath.contains("11")){
+//        currentPath = currentPath.mid(1);
+//    }
     for(int i=0; i<currentPath.length(); i++){
         for(int j=0; j<4; j++){
-            serialhash[(QString(currentPath.at(i)).toInt()-1)*4+j]->setText(s.mid((i-1)*4+j,2));
+            QString showtext = s.mid((i*4+j)*2,2);
+            serialhash[(QString(currentPath.at(i)).toInt()-1)*4+j]->setText(showtext);
         }
         serialcountlist[QString(currentPath.at(i)).toInt()-1]+=1;
         serialhashcount[QString(currentPath.at(i)).toInt()-1]->setText(QString::number(serialcountlist[QString(currentPath.at(i)).toInt()-1],10));
